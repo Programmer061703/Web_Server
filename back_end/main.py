@@ -22,15 +22,6 @@ def find_player(id: str) -> Player:
     return players[id]
 
 
-
-    
-
-
-
-
-
-
-
 def update(payload: Mapping[str, Any]) -> Mapping[str, Any]:
     action = payload['action']
     if action == 'clicked':
@@ -43,7 +34,7 @@ def update(payload: Mapping[str, Any]) -> Mapping[str, Any]:
          player = find_player(payload["id"])
          remaining_history = history[player.known:]
          player.known = len(history)
-         updates: List[Tuple[str, int, int]] = {}
+         updates: List[Tuple[str, int, int]] = []
          for i in range(len(remaining_history)):
             player = remaining_history[i]
             updates.append((player.id, player.x, player.y))

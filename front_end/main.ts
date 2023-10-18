@@ -3,6 +3,7 @@
 class Sprite {
     x: number;
     y: number;
+    id: string;
     speed: number;
     image: HTMLImageElement;
     update: () => void;
@@ -10,10 +11,11 @@ class Sprite {
     dest_x: number | undefined;
     dest_y: number | undefined;
 
-    constructor(x: number, y: number, image_url: string, update_method: () => void, onclick_method: (x: number, y: number) => void) {
+    constructor(x: number, y: number, id: string, image_url: string, update_method: () => void, onclick_method: (x: number, y: number) => void) {
         this.x = x;
         this.y = y;
         this.speed = 4;
+        this.id = id;
         this.image = new Image();
         this.image.src = image_url;
         this.update = update_method;
@@ -59,8 +61,8 @@ class Model {
 
     constructor() {
         this.sprites = [];
-        this.sprites.push(new Sprite(200, 100, "lettuce.png", () => { }, (x, y) => { }));
-        this.turtle = new Sprite(50, 50, "turtle.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y));
+        this.sprites.push(new Sprite(200, 100,"test", "lettuce.png", () => { }, (x, y) => { }));
+        this.turtle = new Sprite(50, 50, g_id, "turtle.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y));
         this.sprites.push(this.turtle);
     }
 
@@ -116,6 +118,8 @@ class Controller {
     key_up: boolean;
     key_down: boolean;
 
+    last_updates_request_time: number = 0;
+
     constructor(model: Model, view: View) {
         this.model = model;
         this.view = view;
@@ -124,6 +128,7 @@ class Controller {
         this.key_up = false;
         this.key_down = false;
         const self = this;
+        this.last_updates_request_time = 0; 
         view.canvas.addEventListener("click", (event) => { self.onClick(event); });
         document.addEventListener('keydown', (event) => { self.keyDown(event); }, false);
         document.addEventListener('keyup', (event) => { self.keyUp(event); }, false);
@@ -133,9 +138,11 @@ class Controller {
         const x = event.pageX - this.view.canvas.offsetLeft;
         const y = event.pageY - this.view.canvas.offsetTop;
         this.model.onclick(x, y);
+        this.model.turtle.set_destination(x, y);
+        this.model.turtle.go_toward_destination();
         httpPost('ajax.html', {
 			id: g_id,
-			action: 'move',
+			action: 'clicked',
 			x: x,
 			y: y,
 		}, this.onAcknowledgeClick);
@@ -165,10 +172,44 @@ class Controller {
         if (this.key_down) dy += speed;
         if (dx != 0 || dy != 0)
             this.model.move(dx, dy);
+            const time = Date.now();
+            if (time - this.last_updates_request_time >= 1000) {
+              this.last_updates_request_time = time;
+
+              //Clean up later
+              httpPost('ajax.html', {
+                id: g_id,
+                action: 'updates',
+            }, this.updateFront);
+            }
     }
     onAcknowledgeClick(ob: any) {
 		console.log(`Response to move: ${JSON.stringify(ob)}`);
 	}
+    updateFront = (ob: any) => {
+        console.log(`Response to move: ${JSON.stringify(ob)}`);
+        if (ob.updates) {
+            for (let i = 0; i < ob.updates.length; i++) {
+                let bool = false;
+                let found = 0;
+                for (let j = 0; j < this.model.sprites.length; j++) {
+                    if (this.model.sprites[j].id === ob.updates[i].id) {
+                        bool = true;
+                        found = j;
+                    }
+                }
+                if (!bool) {
+                    this.model.sprites.push(new Sprite(ob.updates[i].x, ob.updates[i].y, ob.updates[i].id, "blue_robot.png", () => this.model.turtle.go_toward_destination(), (x, y) => this.model.turtle.set_destination(x, y)));
+                    this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i].x;
+                    this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i].y;
+                } else {
+                    this.model.sprites[found].dest_x = ob.updates[i].x;
+                    this.model.sprites[found].dest_y = ob.updates[i].y;
+                }
+            }
+        }
+    }
+    
 }
 
 class Game {
