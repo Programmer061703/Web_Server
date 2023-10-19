@@ -121,7 +121,6 @@ class Model {
 
     constructor() {
         this.sprites = [];
-        //this.sprites.push(new Sprite(200, 100, "lettuce.png", () => { }, (x, y) => { }));
         this.turtle = new Sprite(50, 50, g_id, "green_robot.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y));
         console.log(`g_id=${g_id}`);
         this.sprites.push(this.turtle);
@@ -227,6 +226,8 @@ class Controller {
         else if (event.key === 'ArrowDown') this.key_down = false;
     }
 
+
+
     update() {
         let dx = 0;
         let dy = 0;
@@ -241,7 +242,7 @@ class Controller {
             if (time - this.last_updates_request_time >= 1000) {
               this.last_updates_request_time = time;
 
-              //Clean up later
+              // Send a request to the server for updates
               httpPost('ajax.html', {
                 id: g_id,
                 action: 'updates',
@@ -253,10 +254,12 @@ class Controller {
 	}
 /*
 {
+    Format of the response object:
     "updates": [
-        ["sdfjkl", 123, 456],
+        [id, x, y],
+        [id, x, y],
+        ...
     ]
-}
 */
     updateFront = (ob: any) => {
         if (ob.updates.length > 0)
@@ -265,18 +268,27 @@ class Controller {
             for (let i = 0; i < ob.updates.length; i++) {
                 let bool = false;
                 let found = 0;
+
+                // Checks to see if the robot already exists
                 for (let j = 0; j < this.model.sprites.length; j++) {
+                    //If statment checks the generated ID with the ID of the robot stored on the server
+                    //If Robot does not exist then the bool will remain false
+                    //If Robot does exist then the bool will be true and the index of the robot will be stored in found
+                    //ID of sprites is declared in the constructor of the Sprite class
                     if (this.model.sprites[j].id === ob.updates[i][0]) {
                         bool = true;
                         found = j;
                     }
                 }
+                //If the robot does not exist then a new robot will be created
                 if (!bool) {
                     console.log("Make New Robot");
                     this.model.sprites.push(new Sprite(0,0, ob.updates[i][0], "blue_robot.png", Sprite.prototype.go_toward_destination, (x, y) => this.model.turtle.set_destination(x, y)));
                     console.log(`id=${ob.updates[i][0]}`);
                     this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i][1];
                     this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i][2];
+
+                //If the robot does exist then the robot will be moved to the new location based off of the found index
                 } else {
 
                     let sprite = this.model.sprites[found];
@@ -285,14 +297,7 @@ class Controller {
                     sprite.set_destination(dx, dy);
                    
                     
-
-                    /*
-                    console.log("Respond to update request")
-                    this.model.sprites[found].dest_x = ob.updates[i][1];
-                    console.log(`x=${ob.updates[i][1]}`);
-
-                    this.model.sprites[found].dest_y = ob.updates[i][2];
-                    console.log(`y=${ob.updates[i][2]}, id=${ob.updates[i][0]}, actual_id=${this.model.sprites[found].id}`);*/
+   
                 }
             }
         }
