@@ -283,6 +283,7 @@ class Controller {
                 //If the robot does not exist then a new robot will be created
                 if (!bool) {
                     console.log("Make New Robot");
+                    //window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
                     this.model.sprites.push(new Sprite(0,0, ob.updates[i][0], "blue_robot.png", Sprite.prototype.go_toward_destination, (x, y) => this.model.turtle.set_destination(x, y)));
                     console.log(`id=${ob.updates[i][0]}`);
                     this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i][1];
