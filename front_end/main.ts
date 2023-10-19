@@ -1,5 +1,65 @@
 
 
+interface HttpPostCallback {
+	(x:any): any;
+}
+
+const random_id = (len:number) => {
+    let p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    return [...Array(len)].reduce(a => a + p[Math.floor(Math.random() * p.length)], '');
+}
+
+const g_origin = new URL(window.location.href).origin;
+const g_id = random_id(12);
+
+// Payload is a marshaled (but not JSON-stringified) object
+// A JSON-parsed response object will be passed to the callback
+const httpPost = (page_name: string, payload: any, callback: HttpPostCallback) => {
+	let request = new XMLHttpRequest();
+	request.onreadystatechange = () => {
+		if(request.readyState === 4)
+		{
+			if(request.status === 200) {
+				let response_obj;
+				try {
+					response_obj = JSON.parse(request.responseText);
+				} catch(err) {}
+				if (response_obj) {
+					callback(response_obj);
+				} else {
+					callback({
+						status: 'error',
+						message: 'response is not valid JSON',
+						response: request.responseText,
+					});
+				}
+			} else {
+				if(request.status === 0 && request.statusText.length === 0) {
+					callback({
+						status: 'error',
+						message: 'connection failed',
+					});
+				} else {
+					callback({
+						status: 'error',
+						message: `server returned status ${request.status}: ${request.statusText}`,
+					});
+				}
+			}
+		}
+	};
+	request.open('post', `${g_origin}/${page_name}`, true);
+	request.setRequestHeader('Content-Type', 'application/json');
+	request.send(JSON.stringify(payload));
+}
+
+
+
+
+
+
+
+
 class Sprite {
     x: number;
     y: number;
@@ -61,14 +121,19 @@ class Model {
 
     constructor() {
         this.sprites = [];
-        this.sprites.push(new Sprite(200, 100,"test", "lettuce.png", () => { }, (x, y) => { }));
-        this.turtle = new Sprite(50, 50, g_id, "turtle.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y));
+        //this.sprites.push(new Sprite(200, 100, "lettuce.png", () => { }, (x, y) => { }));
+        this.turtle = new Sprite(50, 50, g_id, "green_robot.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y));
+        console.log(`g_id=${g_id}`);
         this.sprites.push(this.turtle);
     }
 
     update() {
+        //console.log('------------------');
         for (const sprite of this.sprites) {
             sprite.update();
+            console.log(`id=${sprite.id}`);
+            console.log(`x=${sprite.dest_x}`);
+            console.log(`y=${sprite.dest_y}`);
         }
     }
 
@@ -139,7 +204,7 @@ class Controller {
         const y = event.pageY - this.view.canvas.offsetTop;
         this.model.onclick(x, y);
         this.model.turtle.set_destination(x, y);
-        this.model.turtle.go_toward_destination();
+        //this.model.turtle.go_toward_destination();
         httpPost('ajax.html', {
 			id: g_id,
 			action: 'clicked',
@@ -186,25 +251,48 @@ class Controller {
     onAcknowledgeClick(ob: any) {
 		console.log(`Response to move: ${JSON.stringify(ob)}`);
 	}
+/*
+{
+    "updates": [
+        ["sdfjkl", 123, 456],
+    ]
+}
+*/
     updateFront = (ob: any) => {
-        console.log(`Response to move: ${JSON.stringify(ob)}`);
+        if (ob.updates.length > 0)
+            console.log(`Response to move: ${JSON.stringify(ob)}`);
         if (ob.updates) {
             for (let i = 0; i < ob.updates.length; i++) {
                 let bool = false;
                 let found = 0;
                 for (let j = 0; j < this.model.sprites.length; j++) {
-                    if (this.model.sprites[j].id === ob.updates[i].id) {
+                    if (this.model.sprites[j].id === ob.updates[i][0]) {
                         bool = true;
                         found = j;
                     }
                 }
                 if (!bool) {
-                    this.model.sprites.push(new Sprite(ob.updates[i].x, ob.updates[i].y, ob.updates[i].id, "blue_robot.png", () => this.model.turtle.go_toward_destination(), (x, y) => this.model.turtle.set_destination(x, y)));
-                    this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i].x;
-                    this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i].y;
+                    console.log("Make New Robot");
+                    this.model.sprites.push(new Sprite(0,0, ob.updates[i][0], "blue_robot.png", Sprite.prototype.go_toward_destination, (x, y) => this.model.turtle.set_destination(x, y)));
+                    console.log(`id=${ob.updates[i][0]}`);
+                    this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i][1];
+                    this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i][2];
                 } else {
-                    this.model.sprites[found].dest_x = ob.updates[i].x;
-                    this.model.sprites[found].dest_y = ob.updates[i].y;
+
+                    let sprite = this.model.sprites[found];
+                    let dx = ob.updates[i][1];
+                    let dy = ob.updates[i][2];
+                    sprite.set_destination(dx, dy);
+                   
+                    
+
+                    /*
+                    console.log("Respond to update request")
+                    this.model.sprites[found].dest_x = ob.updates[i][1];
+                    console.log(`x=${ob.updates[i][1]}`);
+
+                    this.model.sprites[found].dest_y = ob.updates[i][2];
+                    console.log(`y=${ob.updates[i][2]}, id=${ob.updates[i][0]}, actual_id=${this.model.sprites[found].id}`);*/
                 }
             }
         }
@@ -237,57 +325,4 @@ const timer = setInterval(() => { game.onTimer(); }, 40);
 
 
 
-
-interface HttpPostCallback {
-	(x:any): any;
-}
-
-const random_id = (len:number) => {
-    let p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    return [...Array(len)].reduce(a => a + p[Math.floor(Math.random() * p.length)], '');
-}
-
-const g_origin = new URL(window.location.href).origin;
-const g_id = random_id(12);
-
-// Payload is a marshaled (but not JSON-stringified) object
-// A JSON-parsed response object will be passed to the callback
-const httpPost = (page_name: string, payload: any, callback: HttpPostCallback) => {
-	let request = new XMLHttpRequest();
-	request.onreadystatechange = () => {
-		if(request.readyState === 4)
-		{
-			if(request.status === 200) {
-				let response_obj;
-				try {
-					response_obj = JSON.parse(request.responseText);
-				} catch(err) {}
-				if (response_obj) {
-					callback(response_obj);
-				} else {
-					callback({
-						status: 'error',
-						message: 'response is not valid JSON',
-						response: request.responseText,
-					});
-				}
-			} else {
-				if(request.status === 0 && request.statusText.length === 0) {
-					callback({
-						status: 'error',
-						message: 'connection failed',
-					});
-				} else {
-					callback({
-						status: 'error',
-						message: `server returned status ${request.status}: ${request.statusText}`,
-					});
-				}
-			}
-		}
-	};
-	request.open('post', `${g_origin}/${page_name}`, true);
-	request.setRequestHeader('Content-Type', 'application/json');
-	request.send(JSON.stringify(payload));
-}
 

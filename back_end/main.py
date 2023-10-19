@@ -31,15 +31,22 @@ def update(payload: Mapping[str, Any]) -> Mapping[str, Any]:
          history.append(player)
          print(f'Created player {id}')
     elif action == 'updates':
+         #print('going in')
          player = find_player(payload["id"])
          remaining_history = history[player.known:]
          player.known = len(history)
+         # updates: List[Dict[str, Any]] = []
          updates: List[Tuple[str, int, int]] = []
          for i in range(len(remaining_history)):
             player = remaining_history[i]
             updates.append((player.id, player.x, player.y))
+            # updates.append({"id": player.id, "x": player.x, "y": player.y})
+         #print('coming out')
+         print(updates)
          return {
+              
              'updates': updates,
+
          }
     
 
@@ -47,7 +54,7 @@ def update(payload: Mapping[str, Any]) -> Mapping[str, Any]:
 
     print(f'make_ajax_page was called with {payload}')
     return {
-        'message': 'yo momma',
+        'message': 'Clicked Grabbed',
     }
 
 def main() -> None:
