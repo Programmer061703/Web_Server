@@ -124,6 +124,7 @@ class Model {
         this.turtle = new Sprite(50, 50, g_id, "green_robot.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y));
         console.log(`g_id=${g_id}`);
         this.sprites.push(this.turtle);
+        
     }
 
     update() {

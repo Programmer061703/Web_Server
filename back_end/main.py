@@ -30,6 +30,9 @@ def update(payload: Mapping[str, Any]) -> Mapping[str, Any]:
          player.y = payload["y"]
          history.append(player)
          print(f'Created player {id}')
+         return {
+        'message': 'Clicked Grabbed',
+    }
     elif action == 'updates':
          #print('going in')
          player = find_player(payload["id"])
@@ -48,14 +51,14 @@ def update(payload: Mapping[str, Any]) -> Mapping[str, Any]:
              'updates': updates,
 
          }
+    else:
+         raise ValueError(f'Unknown action: {action}')
     
 
 
 
     print(f'make_ajax_page was called with {payload}')
-    return {
-        'message': 'Clicked Grabbed',
-    }
+    
 
 def main() -> None:
     # Get set up

@@ -154,7 +154,7 @@ def serve_pages(the_port:int, pages:Mapping[str, Callable[[Mapping[str,Any]],Any
 def ping(timeout:int) -> str:
     try:
         global port
-        r = requests.get(f'http://localhost:{port}/ping.html', timeout=timeout)
+        r = requests.get(f'http://127.0.0.1:{port}/ping.html', timeout=timeout)
         return r.text
     except:
         return traceback.format_exc()
