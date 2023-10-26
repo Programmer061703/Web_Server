@@ -8,6 +8,7 @@ class Player():
             self.x = 0
             self.y = 0
             self.known = 0
+            
 
 players: Dict[str, Player] = {}
 history: List[Player] = []

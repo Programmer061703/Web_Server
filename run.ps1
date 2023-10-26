@@ -1,8 +1,6 @@
 .#!/bin/bash
 set -e
 pushd front_end
-echo "Drawing content"
-tsc --strict content.ts
 echo "Type-checking the front end"
 tsc --strict main.ts
 popd

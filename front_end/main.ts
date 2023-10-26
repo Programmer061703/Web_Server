@@ -16,6 +16,8 @@ const g_id = random_id(12);
 // A JSON-parsed response object will be passed to the callback
 const httpPost = (page_name: string, payload: any, callback: HttpPostCallback) => {
 	let request = new XMLHttpRequest();
+    
+    
 	request.onreadystatechange = () => {
 		if(request.readyState === 4)
 		{
@@ -216,6 +218,7 @@ class Controller {
 			action: 'clicked',
 			x: x,
 			y: y,
+            name: name,
 		}, this.onAcknowledgeClick);
     }
 
@@ -332,8 +335,56 @@ class Game {
     }
 }
 
+const push = () => {
+    
+let s: string[] = [];
+
+s.push(`<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #cccccc;">`);
+s.push(`</canvas>`);
+
+const content = document.getElementById('content');
+const name = document.getElementById("name") as HTMLInputElement;
+console.log(content);
+if (content) {
+    content.innerHTML = s.join('');
+
+}
+
 const game = new Game();
 const timer = setInterval(() => { game.onTimer(); }, 40);
+
+
+}
+
+const story = () => {
+
+    let l: string[] = [];
+
+    // Push a story to the array
+
+    
+    l.push(`<p>`);
+    l.push(`You are a turtle. You are in a maze. You must escape.`);
+    l.push(`</p>`);
+    l.push(`<input type="text" id="name" name="name"><br><br>`)
+    l.push(`<button onclick="push()">Start</button>`);
+    
+    const content = document.getElementById('content');
+    console.log(content);
+    if (content) {
+        content.innerHTML = l.join('');
+    }
+
+
+    
+
+}
+
+story();
+
+
+
+
 
 
 
