@@ -159,6 +159,8 @@ class View {
     constructor(model: Model) {
         this.model = model;
         this.canvas = document.getElementById("myCanvas") as HTMLCanvasElement;
+        
+        console.log(`canvas=${this.canvas}`);
         this.turtle = new Image();
         this.turtle.src = "turtle.png";
     }
@@ -171,6 +173,10 @@ class View {
                 ctx.drawImage(sprite.image, sprite.x - sprite.image.width / 2, sprite.y - sprite.image.height);
             }
 			}
+        
+    }
+
+    content(){
         
     }
 }
