@@ -55,6 +55,7 @@ def update(payload: Mapping[str, Any]) -> Mapping[str, Any]:
     else:
          raise ValueError(f'Unknown action: {action}')
     
+    
 
 
 
@@ -68,6 +69,7 @@ def main() -> None:
     # Serve pages
     port = 8987
     delay_open_url(f'http://localhost:{port}/game.html', .1)
+    
     serve_pages(port, {
         'ajax.html': update,
     })

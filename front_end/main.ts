@@ -11,6 +11,7 @@ const random_id = (len:number) => {
 
 const g_origin = new URL(window.location.href).origin;
 const g_id = random_id(12);
+let g_name = "nonameyet";
 
 // Payload is a marshaled (but not JSON-stringified) object
 // A JSON-parsed response object will be passed to the callback
@@ -57,8 +58,8 @@ const httpPost = (page_name: string, payload: any, callback: HttpPostCallback) =
 
 
 
-
-
+//let g_id_to_sprite: Record<string, Sprite> = {};
+//g_id_to_sprite[id] = sprite;
 
 
 
@@ -72,8 +73,9 @@ class Sprite {
     onclick: (x: number, y: number) => void;
     dest_x: number | undefined;
     dest_y: number | undefined;
+    name: string;
 
-    constructor(x: number, y: number, id: string, image_url: string, update_method: () => void, onclick_method: (x: number, y: number) => void) {
+    constructor(x: number, y: number, id: string, image_url: string, update_method: () => void, onclick_method: (x: number, y: number) => void, name: string) {
         this.x = x;
         this.y = y;
         this.speed = 4;
@@ -82,6 +84,7 @@ class Sprite {
         this.image.src = image_url;
         this.update = update_method;
         this.onclick = onclick_method;
+        this.name = name;
     }
 
     set_destination(x: number, y: number) {
@@ -123,7 +126,7 @@ class Model {
 
     constructor() {
         this.sprites = [];
-        this.turtle = new Sprite(50, 50, g_id, "green_robot.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y));
+        this.turtle = new Sprite(50, 50, g_id, "green_robot.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y), (g_name));
         console.log(`g_id=${g_id}`);
         this.sprites.push(this.turtle);
         
@@ -133,9 +136,7 @@ class Model {
         //console.log('------------------');
         for (const sprite of this.sprites) {
             sprite.update();
-            console.log(`id=${sprite.id}`);
-            console.log(`x=${sprite.dest_x}`);
-            console.log(`y=${sprite.dest_y}`);
+            
         }
     }
 
@@ -153,10 +154,14 @@ class Model {
     }
 }
 
+let g_scroll_x = 0;
+let g_scroll_y = 0;
+
 class View {
     model: Model;
     canvas: HTMLCanvasElement;
     turtle: HTMLImageElement;
+    
 
     constructor(model: Model) {
         this.model = model;
@@ -172,8 +177,20 @@ class View {
 			if(ctx){
             ctx.clearRect(0, 0, 1000, 500);
             for (const sprite of this.model.sprites) {
-                ctx.drawImage(sprite.image, sprite.x - sprite.image.width / 2, sprite.y - sprite.image.height);
+                ctx.drawImage(sprite.image, sprite.x - sprite.image.width / 2 - g_scroll_x, sprite.y - sprite.image.height - g_scroll_y);
+                ctx.font = "20px Verdana";
+                ctx.fillText(sprite.name, sprite.x - sprite.image.width / 2 - g_scroll_x, sprite.y - sprite.image.height - 10 - g_scroll_y);
+                
+                
             }
+            const center_x = 500;
+            const center_y = 270;
+            const scroll_rate = 0.03;
+            g_scroll_x += scroll_rate * (this.model.turtle.x - g_scroll_x - center_x);
+            g_scroll_y += scroll_rate * (this.model.turtle.y - g_scroll_y - center_y);
+
+            
+            
 			}
         
     }
@@ -208,17 +225,18 @@ class Controller {
     }
 
     onClick(event: MouseEvent) {
-        const x = event.pageX - this.view.canvas.offsetLeft;
-        const y = event.pageY - this.view.canvas.offsetTop;
+        const x = event.pageX - this.view.canvas.offsetLeft + g_scroll_x;
+        const y = event.pageY - this.view.canvas.offsetTop + g_scroll_y;
         this.model.onclick(x, y);
         this.model.turtle.set_destination(x, y);
         //this.model.turtle.go_toward_destination();
         httpPost('ajax.html', {
 			id: g_id,
-			action: 'clicked',
+            name: g_name,
+			action: 'move',
 			x: x,
 			y: y,
-            name: name,
+           
 		}, this.onAcknowledgeClick);
     }
 
@@ -255,7 +273,7 @@ class Controller {
               // Send a request to the server for updates
               httpPost('ajax.html', {
                 id: g_id,
-                action: 'updates',
+                action: 'update',
             }, this.updateFront);
             }
     }
@@ -266,15 +284,15 @@ class Controller {
 {
     Format of the response object:
     "updates": [
-        [id, x, y],
+        [id, x, y, name],
         [id, x, y],
         ...
     ]
 */
     updateFront = (ob: any) => {
-        if (ob.updates.length > 0)
-            console.log(`Response to move: ${JSON.stringify(ob)}`);
         if (ob.updates) {
+            if (ob.updates.length > 0)
+                console.log(`Response to update: ${JSON.stringify(ob)}`);
             for (let i = 0; i < ob.updates.length; i++) {
                 let bool = false;
                 let found = 0;
@@ -285,7 +303,13 @@ class Controller {
                     //If Robot does not exist then the bool will remain false
                     //If Robot does exist then the bool will be true and the index of the robot will be stored in found
                     //ID of sprites is declared in the constructor of the Sprite class
-                    if (this.model.sprites[j].id === ob.updates[i][0]) {
+                    if (+this.model.sprites[j].id < 100)
+                        continue;
+                    console.log(`Client ID: ${JSON.stringify(this.model.sprites[j].id)}`);
+                    console.log(`Server ID : ${JSON.stringify(ob.updates[i].id)}`);
+                    if (this.model.sprites[j].id === ob.updates[i].id) {
+                        console.log(ob.updates[i].name);
+                        //console.log(this.model.sprites[j].id);
                         bool = true;
                         found = j;
                     }
@@ -294,17 +318,18 @@ class Controller {
                 if (!bool) {
                     console.log("Make New Robot");
                     //window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-                    this.model.sprites.push(new Sprite(0,0, ob.updates[i][0], "blue_robot.png", Sprite.prototype.go_toward_destination, (x, y) => this.model.turtle.set_destination(x, y)));
-                    console.log(`id=${ob.updates[i][0]}`);
-                    this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i][1];
-                    this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i][2];
+
+                    //Change later
+                    this.model.sprites.push(new Sprite(0,0, ob.updates[i].x, "blue_robot.png", Sprite.prototype.go_toward_destination, this.model.turtle.ignore_click, ob.updates[i].name));
+                    this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i].x;
+                    this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i].y;
 
                 //If the robot does exist then the robot will be moved to the new location based off of the found index
                 } else {
 
                     let sprite = this.model.sprites[found];
-                    let dx = ob.updates[i][1];
-                    let dy = ob.updates[i][2];
+                    let dx = ob.updates[i].x;
+                    let dy = ob.updates[i].y;
                     sprite.set_destination(dx, dy);
                    
                     
@@ -338,12 +363,14 @@ class Game {
 const push = () => {
     
 let s: string[] = [];
-
+g_name = (document.getElementById("name") as HTMLInputElement).value;
+console.log(`g_name=${g_name}`);
 s.push(`<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #cccccc;">`);
 s.push(`</canvas>`);
 
 const content = document.getElementById('content');
-const name = document.getElementById("name") as HTMLInputElement;
+
+
 console.log(content);
 if (content) {
     content.innerHTML = s.join('');
@@ -351,10 +378,53 @@ if (content) {
 }
 
 const game = new Game();
+
+g_game = game;
 const timer = setInterval(() => { game.onTimer(); }, 40);
+httpPost('ajax.html', {
+    action: 'get_map',
+}, onReceiveMap);
 
 
 }
+const thing_names = [
+	"chair", // 0
+	"lamp",
+	"mushroom", // 2
+	"outhouse",
+	"pillar", // 4
+	"pond",
+	"rock", // 6
+	"statue",
+	"tree", // 8
+	"turtle",
+];
+
+let g_game: Game;
+
+const onReceiveMap = (ob: any) => {
+    
+    const things = ob.map.things; 
+
+    for(let i = 0; i < things.length; i++ ){
+        let thing = things[i];
+        g_game.model.sprites.push(new Sprite(thing.x, thing.y, thing.kind,`${thing_names[thing.kind]}.png`, Sprite.prototype.sit_still, Sprite.prototype.ignore_click, '' ));
+
+    }
+
+
+
+
+} 
+
+
+    
+
+   
+
+
+
+
 
 const story = () => {
 
@@ -374,11 +444,13 @@ const story = () => {
     if (content) {
         content.innerHTML = l.join('');
     }
+    
 
 
     
 
 }
+
 
 story();
 
