@@ -126,7 +126,7 @@ class Model {
 
     constructor() {
         this.sprites = [];
-        this.turtle = new Sprite(50, 50, g_id, "green_robot.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y), (g_name));
+        this.turtle = new Sprite(50, 50, g_id.toString(), "green_robot.png", () => this.turtle.go_toward_destination(), (x, y) => this.turtle.set_destination(x, y), (g_name));
         console.log(`g_id=${g_id}`);
         this.sprites.push(this.turtle);
         
@@ -290,51 +290,31 @@ class Controller {
     ]
 */
     updateFront = (ob: any) => {
-        if (ob.updates) {
-            if (ob.updates.length > 0)
-                console.log(`Response to update: ${JSON.stringify(ob)}`);
-            for (let i = 0; i < ob.updates.length; i++) {
-                let bool = false;
-                let found = 0;
 
-                // Checks to see if the robot already exists
-                for (let j = 0; j < this.model.sprites.length; j++) {
-                    //If statment checks the generated ID with the ID of the robot stored on the server
-                    //If Robot does not exist then the bool will remain false
-                    //If Robot does exist then the bool will be true and the index of the robot will be stored in found
-                    //ID of sprites is declared in the constructor of the Sprite class
-                    if (+this.model.sprites[j].id < 100)
-                        continue;
-                    console.log(`Client ID: ${JSON.stringify(this.model.sprites[j].id)}`);
-                    console.log(`Server ID : ${JSON.stringify(ob.updates[i].id)}`);
-                    if (this.model.sprites[j].id === ob.updates[i].id) {
-                        console.log(ob.updates[i].name);
-                        //console.log(this.model.sprites[j].id);
-                        bool = true;
-                        found = j;
-                    }
+    if (ob.updates) {
+        for (let i = 0; i < ob.updates.length; i++) {
+            const serverID = ob.updates[i].id;
+
+            // Check if a sprite with the same ID already exists
+    
+            let existingSprite: Sprite | null = null;
+            for (let j = 0; j < this.model.sprites.length; j++) {
+                if (this.model.sprites[j].id === serverID) {
+                    existingSprite = this.model.sprites[j];
+                    break;
                 }
-                //If the robot does not exist then a new robot will be created
-                if (!bool) {
-                    console.log("Make New Robot");
-                    //window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+            }
 
-                    //Change later
-                    this.model.sprites.push(new Sprite(0,0, ob.updates[i].x, "blue_robot.png", Sprite.prototype.go_toward_destination, this.model.turtle.ignore_click, ob.updates[i].name));
-                    this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i].x;
-                    this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i].y;
-
-                //If the robot does exist then the robot will be moved to the new location based off of the found index
-                } else {
-
-                    let sprite = this.model.sprites[found];
-                    let dx = ob.updates[i].x;
-                    let dy = ob.updates[i].y;
-                    sprite.set_destination(dx, dy);
-                   
-                    
-   
-                }
+            if (existingSprite) {
+                // Update the position of the existing sprite
+                const dx = ob.updates[i].x;
+                const dy = ob.updates[i].y;
+                existingSprite.set_destination(dx, dy);
+            } else {
+                // Create a new sprite
+                this.model.sprites.push(new Sprite(0, 0, serverID, "blue_robot.png", Sprite.prototype.go_toward_destination, this.model.turtle.ignore_click, ob.updates[i].name));
+                this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i].x;
+                this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i].y;
             }
         }
     }
