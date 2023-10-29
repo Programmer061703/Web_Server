@@ -290,10 +290,12 @@ class Controller {
     ]
 */
     updateFront = (ob: any) => {
+    
 
     if (ob.updates) {
         for (let i = 0; i < ob.updates.length; i++) {
             const serverID = ob.updates[i].id;
+    
 
             // Check if a sprite with the same ID already exists
     
@@ -319,6 +321,7 @@ class Controller {
         }
     }
     
+}
 }
 
 class Game {
