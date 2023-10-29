@@ -192,6 +192,9 @@ class View {
             
             
 			}
+            httpPost('ajax.html', {
+                action: 'updates', 
+            }, update_count);
         
     }
 
@@ -301,8 +304,11 @@ class Controller {
     
             let existingSprite: Sprite | null = null;
             for (let j = 0; j < this.model.sprites.length; j++) {
+        
                 if (this.model.sprites[j].id === serverID) {
                     existingSprite = this.model.sprites[j];
+                    console.log(`serverID= ${serverID}`);
+                    console.log(`clientID= ${this.model.sprites[j].id}`);
                     break;
                 }
             }
@@ -312,11 +318,13 @@ class Controller {
                 const dx = ob.updates[i].x;
                 const dy = ob.updates[i].y;
                 existingSprite.set_destination(dx, dy);
+                console.log(`Updated existing sprite with ID ${serverID}`);
             } else {
                 // Create a new sprite
                 this.model.sprites.push(new Sprite(0, 0, serverID, "blue_robot.png", Sprite.prototype.go_toward_destination, this.model.turtle.ignore_click, ob.updates[i].name));
                 this.model.sprites[this.model.sprites.length - 1].dest_x = ob.updates[i].x;
                 this.model.sprites[this.model.sprites.length - 1].dest_y = ob.updates[i].y;
+                console.log(`Created a new sprite with ID ${serverID}`);
             }
         }
     }
@@ -350,6 +358,15 @@ g_name = (document.getElementById("name") as HTMLInputElement).value;
 console.log(`g_name=${g_name}`);
 s.push(`<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #cccccc;">`);
 s.push(`</canvas>`);
+s.push(`<br><big><big><b>`);
+s.push(`Gold: <span id="gold">0</span>,`)
+s.push(`Bananas: <span id="bananas">0</span>`);
+s.push(`</b></big></big><br>`); 
+s.push(`<br>`);
+s.push(`<select id="chatWindow" size="8" style="width:1000px"></select>`);
+s.push(`<br>`);
+s.push(`<input type="input" id="chatMessage"></input>`);
+s.push(`<button onclick="postChatMessage()">Post</button>`);
 
 const content = document.getElementById('content');
 
@@ -369,7 +386,13 @@ httpPost('ajax.html', {
 }, onReceiveMap);
 
 
+
+
 }
+
+
+
+
 const thing_names = [
 	"chair", // 0
 	"lamp",
@@ -385,6 +408,10 @@ const thing_names = [
 
 let g_game: Game;
 
+
+
+
+
 const onReceiveMap = (ob: any) => {
     
     const things = ob.map.things; 
@@ -399,6 +426,29 @@ const onReceiveMap = (ob: any) => {
 
 
 } 
+
+const update_count = (ob: any) => {
+
+
+
+   if (ob.gold !== undefined && ob.bananas !== undefined) {
+            // Update the Gold and Bananas counts on the client side
+            const goldElement = document.getElementById('gold');
+            const bananasElement = document.getElementById('bananas');
+
+            if (goldElement && bananasElement) {
+                goldElement.innerText = ob.gold;
+                bananasElement.innerText = ob.bananas;
+            }
+        }
+    }
+
+
+
+
+
+
+
 
 
     
@@ -421,6 +471,7 @@ const story = () => {
     l.push(`</p>`);
     l.push(`<input type="text" id="name" name="name"><br><br>`)
     l.push(`<button onclick="push()">Start</button>`);
+   
     
     const content = document.getElementById('content');
     console.log(content);
