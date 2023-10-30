@@ -351,6 +351,9 @@ class Game {
     }
 }
 
+let g_game: Game;
+
+//Runs after the start button is pressed
 const push = () => {
     
 let s: string[] = [];
@@ -377,6 +380,7 @@ if (content) {
 
 }
 
+//Gets the map from the server after starting the game
 const game = new Game();
 
 g_game = game;
@@ -393,20 +397,10 @@ httpPost('ajax.html', {
 
 
 
-const thing_names = [
-	"chair", // 0
-	"lamp",
-	"mushroom", // 2
-	"outhouse",
-	"pillar", // 4
-	"pond",
-	"rock", // 6
-	"statue",
-	"tree", // 8
-	"turtle",
-];
 
-let g_game: Game;
+
+
+
 
 
 
@@ -485,7 +479,21 @@ const story = () => {
 
 }
 
+//Array of thing names
+const thing_names = [
+	"chair", // 0
+	"lamp",
+	"mushroom", // 2
+	"outhouse",
+	"pillar", // 4
+	"pond",
+	"rock", // 6
+	"statue",
+	"tree", // 8
+	"turtle",
+];
 
+//Starts the game by calling the story function 
 story();
 
 
