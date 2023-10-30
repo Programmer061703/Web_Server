@@ -394,6 +394,16 @@ httpPost('ajax.html', {
 
 }
 
+const postChatMessage = () => {
+
+   
+
+
+
+
+}
+
+
 
 
 
@@ -427,8 +437,8 @@ const update_count = (ob: any) => {
 
    if (ob.gold !== undefined && ob.bananas !== undefined) {
             // Update the Gold and Bananas counts on the client side
-            const goldElement = document.getElementById('gold');
-            const bananasElement = document.getElementById('bananas');
+            const goldElement = document.getElementById('gold') as HTMLElement;
+            const bananasElement = document.getElementById('bananas')as HTMLElement;
 
             if (goldElement && bananasElement) {
                 goldElement.innerText = ob.gold;
