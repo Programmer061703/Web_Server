@@ -333,16 +333,18 @@ class Controller {
 
     if(ob.chats){
         const chatWindow = document.getElementById("chatWindow") as HTMLSelectElement;
-        chatWindow.innerHTML = "";
         console.log(ob.chats); 
         
             // make an array of chats
-
-            const chat = ob.chats;
+        for(let i = 0; i < ob.chats.length; i++ ){
+            
+            const text = ob.chats[i];
             const option = document.createElement("option");
-            option.text = chat;
-            //option.scrollIntoView();
+            option.text = text;
+            option.scrollIntoView();
             chatWindow.add(option);
+
+        }
 
         
         
