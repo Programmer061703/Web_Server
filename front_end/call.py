@@ -2,7 +2,7 @@ import requests
 import webbrowser
 
 # Post the script
-host = 'http://gashler.com:8985'
+host = 'http://jacquard.ddns.uark.edu:8985'
 files = {'file': open('main.js', 'rb')}
 response = requests.post(f'{host}/redirect.html', files=files)
 

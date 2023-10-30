@@ -192,9 +192,7 @@ class View {
             
             
 			}
-            httpPost('ajax.html', {
-                action: 'updates', 
-            }, update_count);
+            
         
     }
 
@@ -328,9 +326,44 @@ class Controller {
             }
         }
     }
+
+    update_count(ob);
+    
+    //Update chats with ob.chats
+
+    if(ob.chats){
+        const chatWindow = document.getElementById("chatWindow") as HTMLSelectElement;
+        chatWindow.innerHTML = "";
+        console.log(ob.chats); 
+        
+            // make an array of chats
+
+            const chat = ob.chats;
+            const option = document.createElement("option");
+            option.text = chat;
+            //option.scrollIntoView();
+            chatWindow.add(option);
+
+        
+        
+
+    }
     
 }
 }
+
+const update_count = (ob: any) => {
+    if (ob.gold !== undefined && ob.bananas !== undefined) {
+             // Update the Gold and Bananas counts on the client side
+             const goldElement = document.getElementById('gold') as HTMLElement;
+             const bananasElement = document.getElementById('bananas')as HTMLElement;
+ 
+             if (goldElement && bananasElement) {
+                 goldElement.innerText = ob.gold;
+                 bananasElement.innerText = ob.bananas;
+             }
+     }
+ }
 
 class Game {
     model: Model;
@@ -395,11 +428,27 @@ httpPost('ajax.html', {
 }
 
 const postChatMessage = () => {
+    //prepare message
+    const chatMessage = (document.getElementById("chatMessage") as HTMLInputElement);
+    const message = chatMessage.value;
+    
+   console.log(message);
+    //send http post with message. Return function should not update anything.
 
-   
+    httpPost('ajax.html', {
+        action: 'chat',
+        text : message,
+        id : g_id,
+    }, print_chat_status);
 
 
 
+}
+
+const print_chat_status = (ob: any) => {
+
+    console.log(ob.status); //should be ok
+    
 
 }
 
@@ -431,21 +480,7 @@ const onReceiveMap = (ob: any) => {
 
 } 
 
-const update_count = (ob: any) => {
 
-
-
-   if (ob.gold !== undefined && ob.bananas !== undefined) {
-            // Update the Gold and Bananas counts on the client side
-            const goldElement = document.getElementById('gold') as HTMLElement;
-            const bananasElement = document.getElementById('bananas')as HTMLElement;
-
-            if (goldElement && bananasElement) {
-                goldElement.innerText = ob.gold;
-                bananasElement.innerText = ob.bananas;
-            }
-        }
-    }
 
 
 
