@@ -292,7 +292,7 @@ class Controller {
 */
     updateFront = (ob: any) => {
     
-
+// Loads Sprites
     if (ob.updates) {
         for (let i = 0; i < ob.updates.length; i++) {
             const serverID = ob.updates[i].id;
@@ -429,6 +429,33 @@ httpPost('ajax.html', {
 
 }
 
+const story = () => {
+
+    let l: string[] = [];
+
+    // Push a story to the array
+
+    
+    l.push(`<p>`);
+    l.push(`You are a turtle. You are in a maze. You must escape.`);
+    l.push(`</p>`);
+    l.push(`<input type="text" id="name" name="name"><br><br>`)
+    l.push(`<button onclick="push()">Start</button>`);
+   
+    
+    const content = document.getElementById('content');
+    console.log(content);
+    if (content) {
+        content.innerHTML = l.join('');
+    }
+    
+
+
+    
+
+}
+
+
 const postChatMessage = () => {
     //prepare message
     const chatMessage = (document.getElementById("chatMessage") as HTMLInputElement);
@@ -455,18 +482,6 @@ const print_chat_status = (ob: any) => {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 const onReceiveMap = (ob: any) => {
     
     const things = ob.map.things; 
@@ -482,49 +497,6 @@ const onReceiveMap = (ob: any) => {
 
 } 
 
-
-
-
-
-
-
-
-
-
-
-    
-
-   
-
-
-
-
-
-const story = () => {
-
-    let l: string[] = [];
-
-    // Push a story to the array
-
-    
-    l.push(`<p>`);
-    l.push(`You are a turtle. You are in a maze. You must escape.`);
-    l.push(`</p>`);
-    l.push(`<input type="text" id="name" name="name"><br><br>`)
-    l.push(`<button onclick="push()">Start</button>`);
-   
-    
-    const content = document.getElementById('content');
-    console.log(content);
-    if (content) {
-        content.innerHTML = l.join('');
-    }
-    
-
-
-    
-
-}
 
 //Array of thing names
 const thing_names = [
