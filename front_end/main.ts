@@ -271,7 +271,7 @@ class Controller {
             if (time - this.last_updates_request_time >= 1000) {
               this.last_updates_request_time = time;
 
-              // Send a request to the server for updates
+              // Send a request to the server for updates                  
               httpPost('ajax.html', {
                 id: g_id,
                 action: 'update',
