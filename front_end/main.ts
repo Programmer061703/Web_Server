@@ -458,15 +458,15 @@ const story = () => {
 
 const postChatMessage = () => {
     //prepare message
-    const chatMessage = (document.getElementById("chatMessage") as HTMLInputElement);
-    const message = chatMessage.value;
+    const chatMessage = (document.getElementById("chatMessage") as HTMLInputElement).value;
+   
     
-   console.log(message);
+   console.log(chatMessage);
     //send http post with message. Return function should not update anything.
 
     httpPost('ajax.html', {
         action: 'chat',
-        text : message,
+        text : chatMessage,
         id : g_id,
     }, print_chat_status);
 
