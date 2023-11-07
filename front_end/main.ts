@@ -341,8 +341,9 @@ class Controller {
             const text = ob.chats[i];
             const option = document.createElement("option");
             option.text = text;
-            option.scrollIntoView();
+            
             chatWindow.add(option);
+            option.scrollIntoView();
 
         }
 
